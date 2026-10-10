@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management | SP Chaudhary</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .attendance-box {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .filter-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .filter-row select,
+        .filter-row input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .attendance-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .summary-card {
+            padding: 18px;
+            border-radius: 9px;
+            background: #f1f5f9;
+        }
+
+        .summary-card h3 {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .summary-card p {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .present-color {
+            color: #15803d;
+        }
+
+        .absent-color {
+            color: #b91c1c;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            min-width: 650px;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .attendance-table th {
+            background: #e8f0fe;
+        }
+
+        .status-select {
+            width: 130px;
+            padding: 9px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-weight: bold;
+        }
+
+        .btn-attendance {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            color: white;
+            background: #12366b;
+            cursor: pointer;
+            margin: 8px 6px 0 0;
+        }
+
+        .btn-green {
+            background: #15803d;
+        }
+
+        .btn-gray {
+            background: #64748b;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 800px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .attendance-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media print {
+            .sidebar,
+            .no-print,
+            header p {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0;
+                padding: 0;
+            }
+
+            .attendance-box {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <h2>SP CHAUDHARY</h2>
+        <p>School Management</p>
+
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="students.html">👨‍🎓 Students</a>
+        <a href="attendance.html">📅 Attendance</a>
+        <a href="fees.html">💰 Fees Management</a>
+        <a href="marksheet.html">📊 Marksheet</a>
+    </aside>
+
+    <main class="main-content">
+
+        <header>
+            <h1>📅 Attendance Management</h1>
+            <p>SP Chaudhary School Management System</p>
+        </header>
+
+        <section class="attendance-box no-print">
+            <h2>कक्षा की उपस्थिति लगाएँ</h2>
+
+            <div class="filter-row">
+
+                <div>
+                    <label for="attendanceClass">Select Class</label>
+                    <select id="attendanceClass">
+                        <option value="">-- कक्षा चुनें --</option>
+                        <option value="6">Class 6</option>
+                        <option value="7">Class 7</option>
+                        <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
+                        <option value="11">Class 11</option>
+                        <option value="12">Class 12</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="attendanceDate">Attendance Date</label>
+                    <input type="date" id="attendanceDate">
+                </div>
+
+                <div>
+                    <label for="attendanceSection">Section</label>
+                    <select id="attendanceSection">
+                        <option value="">All Sections</option>
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button class="btn-attendance" id="loadStudents">
+                Show Students
+            </button>
+
+            <button class="btn-attendance btn-gray" id="markAllAbsent">
+                Mark All Absent
+            </button>
+
+            <button class="btn-attendance btn-green" id="markAllPresent">
+                Mark All Present
+            </button>
+
+            <p id="message" class="message"></p>
+        </section>
+
+        <section class="attendance-box">
+
+            <h2 id="classHeading">विद्यार्थियों की सूची</h2>
+
+            <div class="attendance-summary">
+
+                <div class="summary-card">
+                    <h3>Total Students</h3>
+                    <p id="totalCount">0</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Present</h3>
+                    <p id="presentCount" class="present-color">0</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Absent</h3>
+                    <p id="absentCount" class="absent-color">0</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Attendance %</h3>
+                    <p id="attendancePercent">0%</p>
+                </div>
+
+            </div>
+
+            <div class="table-wrapper">
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Roll No.</th>
+                            <th>Admission No.</th>
+                            <th>Student Name</th>
+                            <th>Attendance Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="attendanceTable">
+                        <tr>
+                            <td colspan="4">
+                                पहले कक्षा चुनकर Show Students पर क्लिक करें।
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="no-print">
+                <button class="btn-attendance btn-green" id="saveAttendance">
+                    💾 Save Attendance
+                </button>
+
+                <button class="btn-attendance" id="printAttendance">
+                    🖨️ Print Attendance
+                </button>
+            </div>
+
+            <p id="saveMessage" class="message"></p>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

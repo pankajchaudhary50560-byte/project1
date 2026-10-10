@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Admission | SP Chaudhary</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .form-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .btn {
+            background: #12366b;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background: #24539a;
+        }
+
+        .secondary-btn {
+            background: #64748b;
+        }
+
+        .student-photo {
+            width: 100px;
+            height: 110px;
+            object-fit: cover;
+            display: none;
+            margin-top: 10px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #e8f0fe;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 350px;
+            padding: 11px;
+            margin-top: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+        }
+
+        .photo-small {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+        }
+
+        .delete-btn {
+            background: #b91c1c;
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 650px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: auto;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+        }
+
+        @media print {
+            .sidebar,
+            .form-container,
+            .search-box,
+            .no-print,
+            header p {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0;
+                padding: 0;
+            }
+
+            .table-container {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <h2>SP CHAUDHARY</h2>
+        <p>School Management</p>
+
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="students.html">👨‍🎓 Students</a>
+        <a href="attendance.html">📅 Attendance</a>
+        <a href="fees.html">💰 Fees Management</a>
+        <a href="marksheet.html">📊 Marksheet</a>
+    </aside>
+
+    <main class="main-content">
+
+        <header>
+            <h1>Student Admission</h1>
+            <p>SP Chaudhary School Management System</p>
+        </header>
+
+        <section class="form-container">
+
+            <h2>➕ Add New Student</h2>
+
+            <form id="studentForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="admissionNo">Admission Number *</label>
+                        <input id="admissionNo" required maxlength="30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rollNo">Roll Number</label>
+                        <input id="rollNo" maxlength="30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentName">Student Name *</label>
+                        <input id="studentName" required maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fatherName">Father's Name *</label>
+                        <input id="fatherName" required maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motherName">Mother's Name</label>
+                        <input id="motherName" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input id="dob" type="date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="className">Class *</label>
+                        <select id="className" required>
+                            <option value="">Select Class</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                            <option>9</option>
+                            <option>10</option>
+                            <option>11</option>
+                            <option>12</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="section">Section</label>
+                        <select id="section">
+                            <option value="">Select Section</option>
+                            <option>A</option>
+                            <option>B</option>
+                            <option>C</option>
+                            <option>D</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender">
+                            <option value="">Select</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile">Parent Mobile Number</label>
+                        <input id="mobile" type="tel"
+                               inputmode="numeric"
+                               pattern="[0-9]{10}"
+                               maxlength="10"
+                               placeholder="10 digit mobile number">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="address">Address</label>
+                        <textarea id="address" rows="3"
+                                  maxlength="500"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="photo">Student Photo</label>
+                        <input id="photo" type="file"
+                               accept="image/jpeg,image/png,image/webp">
+                        <img id="photoPreview"
+                             class="student-photo"
+                             alt="Student photo preview">
+                    </div>
+
+                </div>
+
+                <button class="btn" type="submit">💾 Save Student</button>
+
+                <button class="btn secondary-btn"
+                        type="reset">Clear Form</button>
+
+            </form>
+
+        </section>
+
+        <section class="table-container">
+
+            <h2>📋 Student Records</h2>
+
+            <input
+                id="search"
+                class="search-box"
+                type="search"
+                placeholder="Search by name, admission number or class">
+
+            <button class="btn no-print"
+                    type="button"
+                    onclick="window.print()">🖨️ Print List</button>
+
+            <div style="margin-top:15px">
+                Total Students: <strong id="totalStudents">0</strong>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Admission No.</th>
+                        <th>Roll No.</th>
+                        <th>Student Name</th>
+                        <th>Father's Name</th>
+                        <th>Class</th>
+                        <th>Section</th>
+                        <th class="no-print">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="studentTable"></tbody>
+            </table>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

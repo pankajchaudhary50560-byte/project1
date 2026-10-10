@@ -1,0 +1,940 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f3f6fb;
+    color: #1e293b;
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: #12366b;
+    color: white;
+    padding: 25px 15px;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.sidebar p {
+    font-size: 13px;
+    color: #dbeafe;
+    margin-bottom: 30px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 14px 12px;
+    margin: 8px 0;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.sidebar a:hover {
+    background: #24539a;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+}
+
+header {
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+header p {
+    color: #64748b;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000d;
+}
+
+.card h3 {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.card p {
+    font-size: 30px;
+    font-weight: bold;
+    color: #12366b;
+}
+
+.welcome-box {
+    background: white;
+    padding: 25px;
+    margin-top: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000d;
+}
+
+.welcome-box h2 {
+    margin-bottom: 12px;
+}
+
+.welcome-box p {
+    line-height: 1.6;
+    color: #64748b;
+}
+
+@media (max-width: 650px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+}document.addEventListener("DOMContentLoaded", function () {
+
+    // Dashboard
+    const studentsCard = document.getElementById("students");
+    const teachersCard = document.getElementById("teachers");
+    const attendanceCard = document.getElementById("attendance");
+    const feesCard = document.getElementById("fees");
+
+    // Demo dashboard values
+    if (studentsCard) {
+        studentsCard.textContent = "0";
+        teachersCard.textContent = "0";
+        attendanceCard.textContent = "0%";
+        feesCard.textContent = "₹0";
+    }
+
+    // Student admission page
+    const form = document.getElementById("studentForm");
+
+    if (!form) return;
+
+    const table = document.getElementById("studentTable");
+    const total = document.getElementById("totalStudents");
+    const search = document.getElementById("search");
+    const photoInput = document.getElementById("photo");
+    const preview = document.getElementById("photoPreview");
+
+    // This is a local demonstration, not a multi-school database.
+    const STORAGE_KEY = "spChaudharyStudentsDemo";
+
+    let students = [];
+
+    try {
+        students = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+        if (!Array.isArray(students)) {
+            students = [];
+        }
+    } catch {
+        students = [];
+    }
+
+    let selectedPhoto = "";
+
+    // Preview photo
+    photoInput.addEventListener("change", function () {
+
+        const file = photoInput.files[0];
+
+        selectedPhoto = "";
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+
+        if (!file) return;
+
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            alert("Please select a JPG, PNG or WebP photo.");
+            photoInput.value = "";
+            return;
+        }
+
+        // Keep localStorage from becoming too large.
+        if (file.size > 500 * 1024) {
+            alert("Please select a photo smaller than 500 KB.");
+            photoInput.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            selectedPhoto = event.target.result;
+            preview.src = selectedPhoto;
+            preview.style.display = "block";
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    // Save student
+    form.addEventListener("submit", function (event) {
+
+        event.preventDefault();
+
+        const student = {
+            id: crypto.randomUUID(),
+
+            admissionNo: document.getElementById("admissionNo").value.trim(),
+            rollNo: document.getElementById("rollNo").value.trim(),
+            studentName: document.getElementById("studentName").value.trim(),
+            fatherName: document.getElementById("fatherName").value.trim(),
+            motherName: document.getElementById("motherName").value.trim(),
+            dob: document.getElementById("dob").value,
+            className: document.getElementById("className").value,
+            section: document.getElementById("section").value,
+            gender: document.getElementById("gender").value,
+            mobile: document.getElementById("mobile").value.trim(),
+            address: document.getElementById("address").value.trim(),
+            photo: selectedPhoto
+        };
+
+        if (students.some(s => s.admissionNo.toLowerCase() === student.admissionNo.toLowerCase())) {
+            alert("This admission number already exists.");
+            return;
+        }
+
+        try {
+            students.push(student);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+        } catch {
+            students.pop();
+            alert("Browser storage is full. Please use a smaller photo or remove demo records.");
+            return;
+        }
+
+        form.reset();
+        selectedPhoto = "";
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+
+        renderStudents();
+
+        alert("Student saved successfully!");
+    });
+
+    // Display students
+    function renderStudents() {
+
+        const query = search.value.toLowerCase().trim();
+
+        const filtered = students.filter(student => {
+
+            const text = [
+                student.admissionNo,
+                student.rollNo,
+                student.studentName,
+                student.fatherName,
+                student.className
+            ].join(" ").toLowerCase();
+
+            return text.includes(query);
+        });
+
+        table.replaceChildren();
+
+        filtered.forEach(student => {
+
+            const row = document.createElement("tr");
+
+            function addCell(value) {
+                const cell = document.createElement("td");
+                cell.textContent = value || "—";
+                row.appendChild(cell);
+                return cell;
+            }
+
+            const photoCell = document.createElement("td");
+
+            if (student.photo) {
+                const img = document.createElement("img");
+                img.src = student.photo;
+                img.alt = "Student";
+                img.className = "photo-small";
+                photoCell.appendChild(img);
+            } else {
+                photoCell.textContent = "No Photo";
+            }
+
+            row.appendChild(photoCell);
+
+            addCell(student.admissionNo);
+            addCell(student.rollNo);
+            addCell(student.studentName);
+            addCell(student.fatherName);
+            addCell(student.className);
+            addCell(student.section);
+
+            const actionCell = document.createElement("td");
+            actionCell.className = "no-print";
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.className = "delete-btn";
+
+            deleteButton.addEventListener("click", function () {
+
+                if (!confirm("Delete this student record?")) return;
+
+                students = students.filter(s => s.id !== student.id);
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+                } catch {
+                    alert("Unable to update browser storage.");
+                }
+
+                renderStudents();
+            });
+
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            table.appendChild(row);
+        });
+
+        total.textContent = students.length;
+    }
+
+    search.addEventListener("input", renderStudents);
+
+    renderStudents();
+
+});
+
+ ========================================
+// SP CHAUDHARY SCHOOL - FEES MANAGEMENT
+// ========================================
+//
+document.addEventListener("DOMContentLoaded", function () {
+
+    const feeStudent = document.getElementById("feeStudent");
+
+    // यह कोड सिर्फ fees.html पर चलेगा
+    if (!feeStudent) return;
+
+    const STUDENT_KEY = "spChaudharyStudentsDemo";
+    const CHARGE_KEY = "spChaudharyFeeChargesDemo";
+    const PAYMENT_KEY = "spChaudharyFeePaymentsDemo";
+
+    const demandForm = document.getElementById("feeDemandForm");
+    const paymentForm = document.getElementById("feePaymentForm");
+
+    const pendingFee = document.getElementById("pendingFee");
+    const paymentDate = document.getElementById("paymentDate");
+
+    let lastReceiptId = null;
+
+    function readData(key) {
+        try {
+            const data = JSON.parse(localStorage.getItem(key) || "[]");
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function saveData(key, data) {
+        localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function money(amount) {
+        return "₹" + Number(amount || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function today() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function getStudentId(student) {
+        return String(
+            student.id ??
+            student.admissionNo ??
+            student.admissionNumber ??
+            ""
+        );
+    }
+
+    function getStudentName(student) {
+        return student.studentName ||
+            student.name ||
+            student.fullName ||
+            "नाम उपलब्ध नहीं";
+    }
+
+    function getAdmissionNo(student) {
+        return student.admissionNo ||
+            student.admissionNumber ||
+            "N/A";
+    }
+
+    function getClassName(student) {
+        return student.className ||
+            student.class ||
+            "N/A";
+    }
+
+    function getSection(student) {
+        return student.section || "";
+    }
+
+    function getStudents() {
+        return readData(STUDENT_KEY);
+    }
+
+    function getCharges() {
+        return readData(CHARGE_KEY);
+    }
+
+    function getPayments() {
+        return readData(PAYMENT_KEY);
+    }
+
+    function getPaid(chargeId) {
+        return getPayments()
+            .filter(p => p.chargeId === chargeId)
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    }
+
+    function getBalance(charge) {
+        return Math.max(
+            0,
+            Number(charge.amountDue || 0) - getPaid(charge.id)
+        );
+    }
+
+    function selectedStudent() {
+        return getStudents().find(
+            s => getStudentId(s) === feeStudent.value
+        );
+    }
+
+    function setText(id, value) {
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
+    function addOption(select, value, label) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.appendChild(option);
+    }
+
+   // विद्यार्थी सूची लोड करें
+function loadStudents() {
+    const students = getStudents();
+
+    feeStudent.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "-- विद्यार्थी चुनें --";
+    feeStudent.appendChild(defaultOption);
+
+    students.forEach(function(student) {
+        const id = getStudentId(student);
+
+        if (!id) return;
+
+        const option = document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+            getStudentName(student) +
+            " | Admission: " + getAdmissionNo(student) +
+            " | Class: " + getClassName(student) +
+            (getSection(student)
+                ? " | Section: " + getSection(student)
+                : "");
+
+        feeStudent.appendChild(option);
+    });
+
+    if (students.length === 0) {
+        setText(
+            "studentInfo",
+            "इस ब्राउज़र स्टोरेज में विद्यार्थी नहीं मिले।"
+        );
+    } else {
+        setText(
+            "studentInfo",
+            "कुल " + students.length + " विद्यार्थियों का डेटा मिला।"
+        );
+    }
+}
+    });
+
+    if (students.length === 0) {
+        setText(
+            "studentInfo",
+            "कोई विद्यार्थी नहीं मिला। पहले Student Admission में विद्यार्थी जोड़ें।"
+        );
+    }
+}
+
+    // सभी फीस का कुल हिसाब
+    function updateSummary() {
+        const charges = getCharges();
+        const payments = getPayments();
+
+        const totalDemand = charges.reduce(
+            (sum, charge) => sum + Number(charge.amountDue || 0),
+            0
+        );
+
+        const totalCollection = payments.reduce(
+            (sum, payment) => sum + Number(payment.amount || 0),
+            0
+        );
+
+        const totalOutstanding = charges.reduce(
+            (sum, charge) => sum + getBalance(charge),
+            0
+        );
+
+        const todayCollection = payments
+            .filter(payment => payment.date === today())
+            .reduce(
+                (sum, payment) => sum + Number(payment.amount || 0),
+                0
+            );
+
+        setText("totalDemand", money(totalDemand));
+        setText("totalCollection", money(totalCollection));
+        setText("totalOutstanding", money(totalOutstanding));
+        setText("todayCollection", money(todayCollection));
+    }
+
+    // चुने हुए विद्यार्थी की जानकारी
+    function updateStudentInfo() {
+        const student = selectedStudent();
+
+        if (!student) {
+            setText("studentInfo", "विद्यार्थी चुनें।");
+            return;
+        }
+
+        const text =
+            `नाम: ${getStudentName(student)} | ` +
+            `Admission No.: ${getAdmissionNo(student)} | ` +
+            `Class: ${getClassName(student)} | ` +
+            `Section: ${getSection(student) || "N/A"}`;
+
+        setText("studentInfo", text);
+    }
+
+    // विद्यार्थी के pending fee records
+    function loadPendingFees() {
+        const student = selectedStudent();
+
+        pendingFee.innerHTML = "";
+        addOption(pendingFee, "", "-- फीस रिकॉर्ड चुनें --");
+
+        if (!student) return;
+
+        const studentId = getStudentId(student);
+
+        getCharges()
+            .filter(charge =>
+                charge.studentId === studentId &&
+                getBalance(charge) > 0
+            )
+            .forEach(charge => {
+                addOption(
+                    pendingFee,
+                    charge.id,
+                    `${charge.feeType} | ${charge.period} | बाकी: ${money(getBalance(charge))}`
+                );
+            });
+    }
+
+    // चुने हुए विद्यार्थी की फीस टेबल
+    function renderStudentFees() {
+        const student = selectedStudent();
+        const tbody = document.getElementById("studentFeeTable");
+
+        tbody.innerHTML = "";
+
+        if (!student) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5;
+            cell.textContent = "विद्यार्थी चुनें।";
+            return;
+        }
+
+        const studentId = getStudentId(student);
+
+        const charges = getCharges().filter(
+            charge => charge.studentId === studentId
+        );
+
+        if (charges.length === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5;
+            cell.textContent = "इस विद्यार्थी की कोई फीस नहीं जोड़ी गई है।";
+            return;
+        }
+
+        charges.forEach(charge => {
+            const paid = getPaid(charge.id);
+            const balance = getBalance(charge);
+            const row = tbody.insertRow();
+
+            [
+                charge.feeType,
+                charge.period,
+                money(charge.amountDue),
+                money(paid),
+                money(balance)
+            ].forEach((value, index) => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+
+                if (index === 4 && balance > 0) {
+                    cell.className = "balance";
+                }
+
+                if (index === 4 && balance === 0) {
+                    cell.className = "paid";
+                }
+            });
+        });
+    }
+
+    // सभी विद्यार्थियों की फीस टेबल
+    function renderAllFees() {
+        const tbody = document.getElementById("allFeeTable");
+        const search = (
+            document.getElementById("feeSearch").value || ""
+        ).toLowerCase().trim();
+
+        tbody.innerHTML = "";
+
+        const students = getStudents();
+        const charges = getCharges();
+
+        const studentMap = new Map(
+            students.map(student => [
+                getStudentId(student),
+                student
+            ])
+        );
+
+        const filteredCharges = charges.filter(charge => {
+            const student = studentMap.get(charge.studentId);
+
+            if (!student) return false;
+
+            const searchText = [
+                getStudentName(student),
+                getAdmissionNo(student),
+                getClassName(student),
+                charge.feeType,
+                charge.period
+            ].join(" ").toLowerCase();
+
+            return searchText.includes(search);
+        });
+
+        if (filteredCharges.length === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 7;
+            cell.textContent = "कोई फीस रिकॉर्ड नहीं मिला।";
+            return;
+        }
+
+        filteredCharges.forEach(charge => {
+            const student = studentMap.get(charge.studentId);
+            const paid = getPaid(charge.id);
+            const balance = getBalance(charge);
+
+            const values = [
+                `${getStudentName(student)} (${getAdmissionNo(student)})`,
+                getClassName(student),
+                charge.feeType,
+                charge.period,
+                money(charge.amountDue),
+                money(paid),
+                money(balance)
+            ];
+
+            const row = tbody.insertRow();
+
+            values.forEach((value, index) => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+
+                if (index === 6 && balance > 0) {
+                    cell.className = "balance";
+                }
+
+                if (index === 6 && balance === 0) {
+                    cell.className = "paid";
+                }
+            });
+        });
+    }
+
+    function refreshPage() {
+        updateSummary();
+        updateStudentInfo();
+        loadPendingFees();
+        renderStudentFees();
+        renderAllFees();
+    }
+
+    // नई फीस डिमांड जोड़ना
+    demandForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const student = selectedStudent();
+
+        if (!student) {
+            alert("पहले विद्यार्थी चुनें।");
+            return;
+        }
+
+        const feeType = document.getElementById("feeType").value;
+        const period = document.getElementById("feePeriod").value.trim();
+        const amountDue = Number(
+            document.getElementById("feeAmount").value
+        );
+        const note = document.getElementById("feeNote").value.trim();
+
+        if (!period || !Number.isFinite(amountDue) || amountDue <= 0) {
+            alert("सही विवरण और फीस की राशि भरें।");
+            return;
+        }
+
+        const studentId = getStudentId(student);
+        const charges = getCharges();
+
+        const duplicate = charges.some(charge =>
+            charge.studentId === studentId &&
+            charge.feeType === feeType &&
+            charge.period.toLowerCase() === period.toLowerCase()
+        );
+
+        if (duplicate) {
+            const proceed = confirm(
+                "इसी विद्यार्थी की इस Fee Type और Details का रिकॉर्ड पहले से है। क्या फिर भी नया रिकॉर्ड जोड़ना है?"
+            );
+
+            if (!proceed) return;
+        }
+
+        charges.push({
+            id: "FEE-" + Date.now() + "-" +
+                Math.random().toString(36).slice(2, 7),
+            studentId: studentId,
+            feeType: feeType,
+            period: period,
+            amountDue: amountDue,
+            note: note,
+            createdAt: today()
+        });
+
+        try {
+            saveData(CHARGE_KEY, charges);
+        } catch (error) {
+            alert("डेटा सेव नहीं हो सका। ब्राउज़र स्टोरेज की जगह जाँचें।");
+            return;
+        }
+
+        demandForm.reset();
+
+        alert("फीस रिकॉर्ड सफलतापूर्वक जोड़ दिया गया।");
+
+        refreshPage();
+    });
+
+    // फीस जमा करना
+    paymentForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const student = selectedStudent();
+
+        if (!student) {
+            alert("पहले विद्यार्थी चुनें।");
+            return;
+        }
+
+        const chargeId = pendingFee.value;
+        const amount = Number(
+            document.getElementById("paymentAmount").value
+        );
+        const method = document.getElementById("paymentMethod").value;
+        const date = paymentDate.value;
+
+        if (!chargeId) {
+            alert("फीस का रिकॉर्ड चुनें।");
+            return;
+        }
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+            alert("जमा राशि सही भरें।");
+            return;
+        }
+
+        if (!date) {
+            alert("जमा करने की तारीख चुनें।");
+            return;
+        }
+
+        const charge = getCharges().find(
+            item => item.id === chargeId
+        );
+
+        if (!charge || charge.studentId !== getStudentId(student)) {
+            alert("चुना गया फीस रिकॉर्ड सही नहीं है।");
+            return;
+        }
+
+        const balance = getBalance(charge);
+
+        if (balance <= 0) {
+            alert("इस फीस का पूरा भुगतान हो चुका है।");
+            refreshPage();
+            return;
+        }
+
+        if (amount > balance) {
+            alert(`जमा राशि बाकी फीस से अधिक नहीं हो सकती। बाकी फीस: ${money(balance)}`);
+            return;
+        }
+
+        const receiptNo =
+            "SPF-" +
+            date.replaceAll("-", "") +
+            "-" +
+            Date.now().toString().slice(-6);
+
+        const payment = {
+            id: "PAY-" + Date.now() + "-" +
+                Math.random().toString(36).slice(2, 7),
+            receiptNo: receiptNo,
+            chargeId: charge.id,
+            studentId: charge.studentId,
+            amount: amount,
+            method: method,
+            date: date
+        };
+
+        const payments = getPayments();
+        payments.push(payment);
+
+        try {
+            saveData(PAYMENT_KEY, payments);
+        } catch (error) {
+            alert("पेमेंट रिकॉर्ड सेव नहीं हो सका। स्टोरेज जाँचें।");
+            return;
+        }
+
+        lastReceiptId = payment.id;
+
+        showReceipt(payment, charge, student);
+
+        paymentForm.reset();
+        paymentDate.value = today();
+
+        refreshPage();
+
+        alert("फीस जमा हो गई। Receipt तैयार है।");
+    });
+
+    // रसीद दिखाना
+    function showReceipt(payment, charge, student) {
+        setText("receiptNumber", payment.receiptNo);
+        setText("receiptDate", payment.date);
+        setText("receiptStudent", getStudentName(student));
+        setText("receiptAdmission", getAdmissionNo(student));
+
+        setText(
+            "receiptClass",
+            `${getClassName(student)} / ${getSection(student) || "N/A"}`
+        );
+
+        setText("receiptType", charge.feeType);
+        setText("receiptPeriod", charge.period);
+        setText("receiptMethod", payment.method);
+        setText("receiptAmount", money(payment.amount));
+
+        const remaining = Math.max(
+            0,
+            Number(charge.amountDue) -
+            getPaid(charge.id)
+        );
+
+        setText("receiptBalance", money(remaining));
+
+        document.getElementById("receiptPreview").style.display = "block";
+
+        document.getElementById("receiptPreview").scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    feeStudent.addEventListener("change", function () {
+        refreshPage();
+    });
+
+    document.getElementById("feeSearch").addEventListener(
+        "input",
+        renderAllFees
+    );
+
+    // आरंभिक सेटअप
+    paymentDate.value = today();
+    loadStudents();
+    refreshPage();
+
+});

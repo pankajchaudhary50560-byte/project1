@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fees Management | SP Chaudhary</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        .fees-container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 15px;
+        }
+
+        .fees-title {
+            background: #173b70;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card, .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        .summary-card h3 {
+            margin-top: 0;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .summary-card p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #173b70;
+            margin-bottom: 0;
+        }
+
+        .panel {
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            color: #173b70;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input, select, textarea, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            background: #173b70;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .green-btn {
+            background: #16834a;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 11px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #173b70;
+            color: white;
+        }
+
+        .balance {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .paid {
+            color: #16834a;
+            font-weight: bold;
+        }
+
+        #receiptPreview {
+            display: none;
+            background: white;
+            border: 2px dashed #333;
+            padding: 25px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .receipt-heading {
+            text-align: center;
+            border-bottom: 2px solid #173b70;
+            padding-bottom: 12px;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .receipt-total {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .note {
+            color: #666;
+            font-size: 13px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receiptPreview, #receiptPreview * {
+                visibility: visible;
+            }
+
+            #receiptPreview {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 90%;
+                max-width: none;
+                margin: 0;
+                border: 1px solid #333;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="fees-container">
+
+    <div class="fees-title">
+        <h1>SP CHAUDHARY SCHOOL</h1>
+        <p>Fees Management System</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card">
+            <h3>Total Fee Demand</h3>
+            <p id="totalDemand">₹0</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Total Collection</h3>
+            <p id="totalCollection">₹0</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Total Outstanding</h3>
+            <p id="totalOutstanding">₹0</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Today's Collection</h3>
+            <p id="todayCollection">₹0</p>
+        </div>
+    </div>
+
+    <section class="panel no-print">
+        <h2>1. विद्यार्थी चुनें</h2>
+
+        <label for="feeStudent">Student Name / Admission Number</label>
+        <select id="feeStudent">
+            <option value="">पहले विद्यार्थी चुनें</option>
+        </select>
+
+        <p id="studentInfo" class="note">
+            विद्यार्थी की जानकारी यहाँ दिखाई देगी।
+        </p>
+    </section>
+
+    <section class="panel no-print">
+        <h2>2. नई फीस जोड़ें</h2>
+
+        <form id="feeDemandForm">
+            <div class="form-grid">
+
+                <div>
+                    <label for="feeType">Fee Type</label>
+                    <select id="feeType" required>
+                        <option value="Admission Fee">Admission Fee</option>
+                        <option value="Monthly Fee">Monthly Fee</option>
+                        <option value="Examination Fee">Examination Fee</option>
+                        <option value="Registration Fee">Registration Fee</option>
+                        <option value="Transport Fee">Transport Fee</option>
+                        <option value="Other Charges">Other Charges</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="feePeriod">Month / Session / Details</label>
+                    <input
+                        type="text"
+                        id="feePeriod"
+                        placeholder="जैसे October 2026"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="feeAmount">कुल फीस (₹)</label>
+                    <input
+                        type="number"
+                        id="feeAmount"
+                        min="1"
+                        step="0.01"
+                        placeholder="जैसे 1500"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="feeNote">Remark (Optional)</label>
+                    <input
+                        type="text"
+                        id="feeNote"
+                        placeholder="कोई अतिरिक्त जानकारी"
+                    >
+                </div>
+
+            </div>
+
+            <br>
+            <button type="submit">+ Add Fee Demand</button>
+        </form>
+    </section>
+
+    <section class="panel no-print">
+        <h2>3. फीस जमा करें</h2>
+
+        <form id="feePaymentForm">
+            <div class="form-grid">
+
+                <div>
+                    <label for="pendingFee">फीस का रिकॉर्ड चुनें</label>
+                    <select id="pendingFee" required>
+                        <option value="">पहले विद्यार्थी चुनें</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="paymentAmount">जमा राशि (₹)</label>
+                    <input
+                        type="number"
+                        id="paymentAmount"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="जैसे 500"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="paymentMethod">Payment Method</label>
+                    <select id="paymentMethod">
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="paymentDate">जमा करने की तारीख</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+
+            </div>
+
+            <br>
+            <button type="submit" class="green-btn">
+                जमा करें और Receipt बनाएँ
+            </button>
+        </form>
+    </section>
+
+    <section class="panel no-print">
+        <h2>4. विद्यार्थी की फीस का रिकॉर्ड</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fee Type</th>
+                        <th>Details</th>
+                        <th>Total Fee</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+
+                <tbody id="studentFeeTable">
+                    <tr>
+                        <td colspan="5">विद्यार्थी चुनें।</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel no-print">
+        <h2>5. सभी फीस रिकॉर्ड</h2>
+
+        <input
+            type="text"
+            id="feeSearch"
+            placeholder="नाम या Admission Number से खोजें..."
+        >
+
+        <br><br>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Fee Type</th>
+                        <th>Details</th>
+                        <th>Total</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+
+                <tbody id="allFeeTable">
+                    <tr>
+                        <td colspan="7">कोई रिकॉर्ड नहीं।</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="receiptPreview">
+        <div class="receipt-heading">
+            <h2>SP CHAUDHARY SCHOOL</h2>
+            <h3>FEE PAYMENT RECEIPT</h3>
+        </div>
+
+        <div class="receipt-row">
+            <span>Receipt No.</span>
+            <strong id="receiptNumber"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Date</span>
+            <strong id="receiptDate"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Student Name</span>
+            <strong id="receiptStudent"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Admission No.</span>
+            <strong id="receiptAdmission"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Class / Section</span>
+            <strong id="receiptClass"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Fee Type</span>
+            <strong id="receiptType"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Fee Details</span>
+            <strong id="receiptPeriod"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Payment Method</span>
+            <strong id="receiptMethod"></strong>
+        </div>
+
+        <div class="receipt-row receipt-total">
+            <span>Amount Received</span>
+            <strong id="receiptAmount"></strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Remaining Balance</span>
+            <strong id="receiptBalance"></strong>
+        </div>
+
+        <br>
+        <p>राशि जमा करने के लिए धन्यवाद।</p>
+        <p style="text-align:right; margin-top:45px;">
+            अधिकृत हस्ताक्षर
+        </p>
+
+        <div class="no-print">
+            <button type="button" onclick="window.print()">
+                🖨️ Print Receipt
+            </button>
+        </div>
+    </section>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
